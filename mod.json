@@ -14,6 +14,10 @@
 	"tags": [
 		"universal", "online", "utility"
 	],
+	"links": {
+		"source": "https://github.com/johnonenintingle/all-levels-list-companion/",
+		"community": "https://discord.com/invite/zWHuB4H4EF"
+	},
 	"dependencies": {
 		"geode.node-ids": ">=1.23.3",
 		"prevter.imageplus": ">=1.1.1"
