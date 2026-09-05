@@ -1,0 +1,32 @@
+{
+	"geode": "5.7.1",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "john119.list-sync",
+	"name": "All Levels List Companion",
+	"version": "v1.0.0",
+	"developer": "john119",
+	"description": "",
+	"tags": [
+		"universal", "online", "utility"
+	],
+	"dependencies": {
+		"geode.node-ids": ">=1.23.3",
+		"prevter.imageplus": ">=1.1.1"
+	},
+	"resources": {
+		"sprites": [
+			"resources/*.png"
+		]
+	},
+	"settings": {
+		"button-setting": {
+			"type": "custom:button-setting",
+			"name": "Open Mod Settings"
+		}
+	}
+}
