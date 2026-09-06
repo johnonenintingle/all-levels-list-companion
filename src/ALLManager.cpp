@@ -1,7 +1,5 @@
 #include "ALLManager.hpp"
 
-#include <arc/time/Sleep.hpp>
-
 ALLManager& ALLManager::get() {
     static ALLManager instance;
     return instance;
@@ -1021,7 +1019,7 @@ void ALLManager::isLevelInList(int id, LevelInListCallback callback) {
 
     m_levelInListCallbacks[id].push_back(std::move(callback));
 
-    if (m_levelInListCallbacks.size() > 1) {
+    if (m_levelInListCallbacks.at(id).size() > 1) {
         return;
     }
 

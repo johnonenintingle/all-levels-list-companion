@@ -125,7 +125,7 @@ class $modify(MenuLayer) {
             }
         });
         btn->setID("all-button"_spr);
-        btn->setScale(0.7f);
+        btn->setScale(0.63f);
         btn->setScaleMultiplier(1.11f);
         btn->setPosition(this->getContentSize() - btn->getScaledContentSize() / 2.f - CCPoint{9, 9});
 

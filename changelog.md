@@ -1,3 +1,7 @@
+# v1.0.2
+
+* Fixed one bug when checking if a level is in the list
+
 # v1.0.1
 
 * Fixed possible crash with better touch prio instaled

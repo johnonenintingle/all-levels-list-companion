@@ -120,7 +120,7 @@ bool ProfilePopup::init() {
 
     m_pendingLabel = CCLabelBMFont::create("", "goldFont.fnt");
     m_pendingLabel->setAnchorPoint({0, 0.5f});
-    m_pendingLabel->setPosition({28, 85.5f});
+    m_pendingLabel->setPosition({28, 85});
     m_pendingLabel->setScale(0.525f);
 
     m_mainLayer->addChild(m_pendingLabel);
