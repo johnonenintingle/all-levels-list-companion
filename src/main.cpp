@@ -272,16 +272,20 @@ class $modify(AccountLayer) {
 
 class $modify(EditorPauseLayer) {
 
-    bool init(LevelEditorLayer* p0) {
-        if (!EditorPauseLayer::init(p0)) {
+    bool init(LevelEditorLayer* editorLayer) {
+        if (!EditorPauseLayer::init(editorLayer)) {
             return false;
         }
 
+        if (!editorLayer) {
+            return true;
+        }
+
         if (
-            !m_editorLayer->m_editorUI->m_selectedObject
+            !editorLayer->m_editorUI->m_selectedObject
             && (
-                !m_editorLayer->m_editorUI->m_selectedObjects
-                || m_editorLayer->m_editorUI->m_selectedObjects->count() <= 0
+                !editorLayer->m_editorUI->m_selectedObjects
+                || editorLayer->m_editorUI->m_selectedObjects->count() <= 0
             )
         ) {
             return true;

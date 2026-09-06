@@ -71,6 +71,7 @@ bool LoginPopup::init() {
     usernameInput->setScale(0.585f);
     usernameInput->getBGSprite()->setOpacity(60);
     usernameInput->getInputNode()->getTextLabel()->setOpacity(120);
+    usernameInput->setCommonFilter(CommonFilter::Any);
     usernameInput->setCallback([input = usernameInput](const std::string& str) {
         input->getInputNode()->getTextLabel()->setOpacity(str.empty() ? 120 : 255);
     });
@@ -88,6 +89,7 @@ bool LoginPopup::init() {
     passwordInput->setPasswordMode(true);
     passwordInput->setScale(0.585f);
     passwordInput->getBGSprite()->setOpacity(60);
+    passwordInput->setCommonFilter(CommonFilter::Any);
     passwordInput->getInputNode()->getTextLabel()->setOpacity(120);
 
     container->addChild(passwordInput);

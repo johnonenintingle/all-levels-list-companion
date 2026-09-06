@@ -7,7 +7,7 @@ class LoadingScreenLayer : public CCLayer {
 private:
 
     CCLabelBMFont* m_label = nullptr;
-    CCNode* m_closeBtn = nullptr;
+    Ref<CCNode> m_closeBtn = nullptr;
 
     ~LoadingScreenLayer();
     LoadingScreenLayer(CCNode*);

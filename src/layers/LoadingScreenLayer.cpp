@@ -1,7 +1,9 @@
 #include "LoadingScreenLayer.hpp"
 
 LoadingScreenLayer::~LoadingScreenLayer() {
-    CCTouchDispatcher::get()->removeDelegate(this);
+    queueInMainThread([self = Ref(this)] {
+        CCTouchDispatcher::get()->removeDelegate(self.data());
+    });
 }
 
 LoadingScreenLayer::LoadingScreenLayer(CCNode* closeBtn)
