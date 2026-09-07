@@ -119,7 +119,7 @@ static Difficulty difficultyForString(std::string_view str) {
     else { return Difficulty::Unknown; }
 }
 
-static std::string stringForDifficulty(Difficulty difficulty) {
+static std::string_view stringForDifficulty(Difficulty difficulty) {
     switch (difficulty) {
         case Difficulty::Impossible: return "Impossible";
         case Difficulty::ExtremeDemon: return "Extreme Demon";
@@ -135,6 +135,18 @@ static std::string stringForDifficulty(Difficulty difficulty) {
         case Difficulty::Auto: return "Auto";
         default:
         case Difficulty::Unknown: return "Unknown";
+    }
+}
+
+static std::string_view stringForLength(int length) {
+    switch (length) {
+        default: return "";
+        case 0: return "Tiny";
+        case 1: return "Short";
+        case 2: return "Medium";
+        case 3: return "Long";
+        case 4: return "XL";
+        case 5: return "Platformer";
     }
 }
 
@@ -174,4 +186,26 @@ static bool isHoveringNode(const CCPoint& pos, CCNode* node) {
     auto localPos = node->convertToNodeSpace(pos);
     auto rect = CCRect{0, 0, node->getContentSize().width, node->getContentSize().height};
     return rect.containsPoint(localPos);
+}
+
+static std::string getBaseURL() {
+    auto url = Mod::get()->getSavedValue<std::string>("api-base-url");
+
+    while (std::string_view(url).ends_with("/")) {
+        url.pop_back();
+    }
+
+    return url;
+}
+
+static std::vector<GJGameLevel*> getCompletedLevels() {
+    auto ret = std::vector<GJGameLevel*>{};
+
+    for (const auto& [_, level] : CCDictionaryExt<const char*, GJGameLevel*>(GameLevelManager::get()->m_onlineLevels)) {
+        if (level->m_normalPercent.value() >= 100) {
+            ret.push_back(level);
+        }
+    }
+
+    return ret;
 }

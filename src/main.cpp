@@ -8,6 +8,7 @@
 #include "popups/CopyArtPopup.hpp"
 
 #include "nodes/ButtonSetting.hpp"
+#include "nodes/LoaderButton.hpp"
 
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
@@ -68,7 +69,7 @@ $on_mod(Loaded) {
         }
     }
     
-    for (auto level : CCArrayExt<GJGameLevel*>(GameLevelManager::get()->getCompletedLevels(false))) {
+    for (auto level : getCompletedLevels()) {
         auto id = level->m_levelID.value();
 
         if (id > 0 && !all.m_registeredCompletions.contains(id)) {
@@ -143,60 +144,68 @@ class $modify(LevelInfoLayer) {
             return false;
         }
 
-        auto id = p0->m_levelID.value();
+        auto id = m_level->m_levelID.value();
 
         if (!ALLManager::get().isLoggedIn() || id <= 0) {
             return true;
         }
 
-        ALLManager::get().isLevelInList(id, [this, selfref = WeakRef(this)](Result<bool> res) {
+        auto menu = this->getChildByID("left-side-menu");
+
+        if (!menu) {
+            return true;
+        }
+
+        auto rateButton = LoaderButton::create("rate.png"_spr, 0.95f, {0, 2.5f}, [this] {
+            if (auto popup = RateLevelPopup::create(m_level)) {
+                popup->show();
+            }
+        });
+        rateButton->setID("rate-button"_spr);
+
+        menu->addChild(rateButton, 2);
+
+        auto rankButton = LoaderButton::create("compare.png"_spr, 1.f, {0.75f, 0.85f}, [this] {
+            if (auto popup = RankLevelPopup::create(m_level)) {
+                popup->show();
+            }
+        });
+        rankButton->setID("compare-button"_spr);
+
+        menu->addChild(rankButton, 1);
+
+        menu->updateLayout();
+
+        ALLManager::get().isLevelInList(id, [this, selfref = WeakRef(this), id, level = m_level, rateButton, rankButton](Result<bool> res) {
             if (!selfref.lock()) {
                 return;
             }
 
-            if (!res.isOk() || !res.unwrap()) {
+            if (!res.isOk()) {
+                rateButton->setError("Failed to get level in the list");
+                rankButton->setError("Failed to get level in the list");
                 return;
             }
 
-            auto menu = this->getChildByID("left-side-menu");
+            if (!res.unwrap()) {
+                ALLManager::get().tryAddLevel(id, level, [this, selfref = WeakRef(this), rateButton, rankButton](Result<bool> res) {
+                    if (!selfref.lock()) {
+                        return;
+                    }
 
-            if (!menu) {
-                return;
+                    if (!res.isOk() || !res.unwrap()) {
+                        rankButton->setError(res.err().value_or("Level is not in the list"));
+                        rateButton->setError(res.err().value_or("Level is not in the list"));
+                        return;
+                    }
+
+                    rankButton->setLoading(false);
+                    rateButton->setLoading(false);
+                });
+            } else {
+                rankButton->setLoading(false);
+                rateButton->setLoading(false);
             }
-
-            auto plain = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-
-            auto spr = CCSprite::create("rate.png"_spr);
-            spr->setPosition(plain->getContentSize() / 2.f + CCPoint{0, 2.5f});
-            spr->setScale(0.95f);
-
-            plain->addChild(spr);
-
-            auto btn = Button::createWithNode(plain, [this](Button*) {
-                if (auto popup = RateLevelPopup::create(m_level)) {
-                    popup->show();
-                }
-            });
-            btn->setID("rate-button"_spr);
-
-            menu->addChild(btn, 2);
-
-            plain = CCSprite::createWithSpriteFrameName("GJ_plainBtn_001.png");
-
-            spr = CCSprite::create("compare.png"_spr);
-            spr->setPosition(plain->getContentSize() / 2.f + CCPoint{0.75f, 0.85f});
-
-            plain->addChild(spr);
-
-            btn = Button::createWithNode(plain, [this](Button*) {
-                if (auto popup = RankLevelPopup::create(m_level)) {
-                    popup->show();
-                }
-            });
-            btn->setID("compare-button"_spr);
-
-            menu->addChild(btn, 1);
-            menu->updateLayout();
         });
 
         return true;
@@ -205,11 +214,13 @@ class $modify(LevelInfoLayer) {
     void confirmDelete(CCObject* p0) {
         ALLManager::get().uncacheLevelRating(m_level->m_levelID.value());
         ALLManager::get().removeUserListsCache();
+
         LevelInfoLayer::confirmDelete(p0);
     }
 
     void onUpdate(CCObject* p0) {
         LevelInfoLayer::onUpdate(p0);
+        
         ALLManager::get().uncacheLevelRating(m_level->m_levelID.value());
         ALLManager::get().removeUserListsCache();
     }
@@ -253,7 +264,7 @@ class $modify(AccountLayer) {
 
         auto& all = ALLManager::get();
         
-        for (auto level : CCArrayExt<GJGameLevel*>(GameLevelManager::get()->getCompletedLevels(false))) {
+        for (auto level : getCompletedLevels()) {
             auto id = level->m_levelID.value();
 
             if (id > 0 && !all.m_registeredCompletions.contains(id)) {

@@ -273,18 +273,20 @@ bool RateLevelPopup::init(std::string_view levelName) {
 
         this->setLoading(true);
 
-        ALLManager::get().submitLevelRating(m_levelID, m_currentRating, [selfref = WeakRef(this)](Result<> res) {
-            auto self = selfref.lock();
-
-            if (!self) {
+        ALLManager::get().submitLevelRating(m_levelID, m_currentRating, [this, selfref = WeakRef(this)](Result<> res) {
+            if (!selfref.lock()) {
                 return;
             }
 
-            self->setLoading(false);
+            this->setLoading(false);
 
             if (res.isOk()) {
-                self->m_originalRating = self->m_currentRating;
-                self->updateButtons();
+                m_originalRating = m_currentRating;
+                this->updateButtons();
+            } else if (res.err().has_value()) {
+                Notification::create(res.err().value(), NotificationIcon::Error)->show();
+            } else {
+                Notification::create("Failed to submit level rating", NotificationIcon::Error)->show();
             }
         });
     });

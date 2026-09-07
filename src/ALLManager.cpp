@@ -22,7 +22,7 @@ void ALLManager::login(std::string_view username, std::string_view password, Log
     async::spawn(
         web::WebRequest()
             .bodyJSON(body)
-            .post(fmt::format("{}/api/auth/login", this->getBaseURL())),
+            .post(fmt::format("{}/api/auth/login", getBaseURL())),
         [this](web::WebResponse resp) {
             auto code = resp.code();
 
@@ -63,7 +63,7 @@ void ALLManager::login(std::string_view username, std::string_view password, Log
             this->setUser(UserInfo{
                 .id = static_cast<int>(json["user"]["id"].asInt().unwrapOr(0)),
                 .username = json["user"]["username"].asString().unwrapOr(""),
-                .avatarUrl = fmt::format("{}{}", this->getBaseURL(), json["user"]["avatarUrl"].asString().unwrapOr(""))
+                .avatarUrl = fmt::format("{}{}", getBaseURL(), json["user"]["avatarUrl"].asString().unwrapOr(""))
             });
 
             for (int i = 0; i < m_loginCallbacks.size(); i++) {
@@ -137,9 +137,16 @@ void ALLManager::linkGDAccount() {
             .bodyJSON(matjson::makeObject({
                 { "accountId", id }
             }))
-            .get(fmt::format("{}/api/users/gd-link", this->getBaseURL())),
+            .get(fmt::format("{}/api/users/gd-link", getBaseURL())),
         [this](web::WebResponse resp) {
-            if (resp.code() != 200) {
+            auto code = resp.code();
+
+            if (code != 200) {
+                if (code == 401) {
+                    this->logout();
+                    m_sessionExpired = true;
+                }
+                
                 this->setLinkedGDAccount(0);
             }
         }
@@ -166,7 +173,7 @@ void ALLManager::updateUserInfo() {
 
     async::spawn(
         web::WebRequest()
-            .get(fmt::format("{}/api/users/{}", this->getBaseURL(), this->getUser().id)),
+            .get(fmt::format("{}/api/users/{}", getBaseURL(), this->getUser().id)),
         [this](web::WebResponse resp) {
             auto code = resp.code();
 
@@ -193,7 +200,7 @@ void ALLManager::updateUserInfo() {
             this->setUser(UserInfo{
                 .id = id,
                 .username = json["username"].asString().unwrapOr(""),
-                .avatarUrl = fmt::format("{}{}", this->getBaseURL(), json["avatarUrl"].asString().unwrapOr(""))
+                .avatarUrl = fmt::format("{}{}", getBaseURL(), json["avatarUrl"].asString().unwrapOr(""))
             });
         }
     );
@@ -219,7 +226,7 @@ void ALLManager::syncAllCompletions() {
 
     auto completions = std::unordered_set<int>{};
 
-    for (auto level : CCArrayExt<GJGameLevel*>(GameLevelManager::get()->getCompletedLevels(false))) {
+    for (auto level : getCompletedLevels()) {
         auto id = level->m_levelID.value();
 
         if (id > 0) {
@@ -270,7 +277,7 @@ void ALLManager::syncCompletions(std::vector<int> completions, bool silent) {
         web::WebRequest()
             .header("Authorization", fmt::format("Bearer {}", m_token))
             .bodyJSON(body)
-            .post(fmt::format("{}/api/levels/bulk-complete", this->getBaseURL())),
+            .post(fmt::format("{}/api/levels/bulk-complete", getBaseURL())),
         [this, silent, total, completions = std::move(completions)](web::WebResponse resp) {
             m_isSyncingCompletions = false;
 
@@ -291,21 +298,20 @@ void ALLManager::syncCompletions(std::vector<int> completions, bool silent) {
 
             auto code = resp.code();
 
-            if (code != 200) {
-                if (code == 401) {
-                    this->logout();
-                    
+            if (code == 401) {
+                this->logout();
+                
+                if (!silent) {
                     Notification::create("Invalid session, please log in again", NotificationIcon::Error)->show();
-
-                    for (int i = 0; i < m_syncCallbacks.size(); i++) {
-                        m_syncCallbacks[i]();
-                    }
-
-                    m_syncCallbacks.clear();
                 } else {
-                    onFailure(total);
-                    log::error("Sync failed, HTTP {}", code);
+                    m_sessionExpired = true;
                 }
+
+                for (int i = 0; i < m_syncCallbacks.size(); i++) {
+                    m_syncCallbacks[i]();
+                }
+
+                m_syncCallbacks.clear();
 
                 return;
             }
@@ -430,26 +436,22 @@ void ALLManager::tryCompleteLevel(int id) {
                     { "completed", true }
                 })
             )
-            .post(fmt::format("{}/api/levels/{}/ratings", this->getBaseURL(), id)),
+            .post(fmt::format("{}/api/levels/{}/ratings", getBaseURL(), id)),
         [this, id](web::WebResponse resp) {
             auto code = resp.code();
 
-            if (code != 200 && code != 201) {
-                if (code == 401) {
-                    this->logout();
-                    m_sessionExpired = true;
-                }
-
+            if (code == 401) {
+                this->logout();
+                m_sessionExpired = true;
                 log::error("Failed to submit completion, HTTP {}", code);
                 this->addCompletion(id, true);
-
                 return;
             }
 
             auto res = resp.json();
 
             if (!res.isOk()) {
-                log::error("Failed to submit completion, 1");
+                log::error("Failed to submit completion, HTTP {}", code);
                 this->addCompletion(id, true);
                 return;
             }
@@ -457,7 +459,7 @@ void ALLManager::tryCompleteLevel(int id) {
             auto json = res.unwrap();
 
             if (json.contains("error")) {
-                log::error("Failed to submit completion, {}", json["error"].asString().unwrapOr("2"));
+                log::error("Failed to submit completion, HTTP {}, {}", code, json["error"].asString().unwrapOr("2"));
                 this->addCompletion(id, true);
                 return;
             }
@@ -498,7 +500,7 @@ void ALLManager::requestLevelRating(int id, LevelRatingCallback callback) {
 
     async::spawn(
         web::WebRequest()
-            .get(fmt::format("{}/api/levels/{}/ratings", this->getBaseURL(), id)),
+            .get(fmt::format("{}/api/levels/{}/ratings", getBaseURL(), id)),
         [this, id](web::WebResponse resp) {
             const auto onFailure = [this, id](std::string_view err = "") {
                 for (int i = 0; i < m_levelRatingCallbacks.at(id).size(); i++) {
@@ -514,7 +516,7 @@ void ALLManager::requestLevelRating(int id, LevelRatingCallback callback) {
 
             if (!res.isOk()) {
                 onFailure();
-                log::error("Failed to get level ratings, 1");
+                log::error("Failed to get level ratings, HTTP {}", code);
                 return;
             }
 
@@ -522,7 +524,7 @@ void ALLManager::requestLevelRating(int id, LevelRatingCallback callback) {
 
             if (json.contains("error")) {
                 onFailure(json["error"].asString().unwrapOr(""));
-                log::error("Failed to get level ratings, 2");
+                log::error("Failed to get level ratings, HTTP {}", code);
                 return;
             }
 
@@ -576,7 +578,7 @@ void ALLManager::submitLevelRating(int id, const LevelRating& rating, SubmitLeve
                     { "review", !rating.review.empty() ? matjson::Value(rating.review) : nullptr }
                 })
             )
-            .post(fmt::format("{}/api/levels/{}/ratings", this->getBaseURL(), id)),
+            .post(fmt::format("{}/api/levels/{}/ratings", getBaseURL(), id)),
         [this, id, rating](web::WebResponse resp) {
             const auto doCallbacks = [this, id](Result<> res) {
                 for (int i = 0; i < m_submitRatingCallbacks.at(id).size(); i++) {
@@ -584,24 +586,15 @@ void ALLManager::submitLevelRating(int id, const LevelRating& rating, SubmitLeve
                 }
 
                 m_submitRatingCallbacks.erase(id);
-
-                if (!res.isOk()) {
-                    Notification::create("Failed to submit level rating", NotificationIcon::Error)->show();
-                }
             };
 
             auto code = resp.code();
 
-            if (code != 200 && code != 201) {
-                if (code == 401) {
-                    this->logout();
-                    Notification::create("Invalid session, please log in again", NotificationIcon::Error)->show();
-                }
-
+            if (code == 401) {
+                this->logout();
+                Notification::create("Invalid session, please log in again", NotificationIcon::Error)->show();
                 log::error("Failed to submit rating, HTTP {}", code);
-                
                 doCallbacks(Err(""));
-
                 return;
             }
 
@@ -609,15 +602,21 @@ void ALLManager::submitLevelRating(int id, const LevelRating& rating, SubmitLeve
 
             if (!res.isOk()) {
                 doCallbacks(Err(""));
-                log::error("Failed to submit rating, 1");
+                log::error("Failed to submit rating, HTTP {}", code);
                 return;
             }
 
             auto json = res.unwrap();
 
             if (json.contains("error")) {
+                doCallbacks(Err(json["error"].asString().unwrapOr("Failed to submit level rating")));
+                log::error("Failed to submit rating, HTTP {}, {}", code, json["error"].asString().unwrapOr("2"));
+                return;
+            }
+
+            if (code != 200 && code != 201) {
                 doCallbacks(Err(""));
-                log::error("Failed to submit rating, {}", json["error"].asString().unwrapOr("2"));
+                log::error("Failed to submit rating, HTTP {}", code);
                 return;
             }
 
@@ -660,7 +659,7 @@ void ALLManager::getUserLists(UserListsCallback callback) {
     async::spawn(
         web::WebRequest()
             .header("Authorization", fmt::format("Bearer {}", m_token))
-            .get(fmt::format("{}/api/users/{}/difficulty?lean=1", this->getBaseURL(), this->getUser().id)),
+            .get(fmt::format("{}/api/users/{}/difficulty?lean=1", getBaseURL(), this->getUser().id)),
         [this](web::WebResponse resp) {
             const auto doCallbacks = [this](Result<const std::vector<UserList>&> res) {
                 for (int i = 0; i < m_userListsCallbacks.size(); i++) {
@@ -709,7 +708,7 @@ void ALLManager::getUserLists(UserListsCallback callback) {
             async::spawn(
                 web::WebRequest()
                     .header("Authorization", fmt::format("Bearer {}", m_token))
-                    .get(fmt::format("{}/api/users/{}/lists", this->getBaseURL(), this->getUser().id)),
+                    .get(fmt::format("{}/api/users/{}/lists", getBaseURL(), this->getUser().id)),
                 [this, doCallbacks, rankings](web::WebResponse resp) {
                     auto code = resp.code();
 
@@ -816,7 +815,7 @@ void ALLManager::requestAnchorLevels(AnchorLevelsCallback callback) {
 
     async::spawn(
         web::WebRequest()
-            .get(fmt::format("{}/api/levels/anchors", this->getBaseURL())),
+            .get(fmt::format("{}/api/levels/anchors", getBaseURL())),
         [this](web::WebResponse resp) {
             const auto doCallbacks = [this](Result<const std::unordered_map<Difficulty, std::vector<LevelRanking>>&> res) {
                 for (int i = 0; i < m_anchorLevelsCallbacks.size(); i++) {
@@ -919,12 +918,14 @@ void ALLManager::submitDifficultyPlacements(const std::vector<LevelSubmitInfo>& 
         web::WebRequest()
             .header("Authorization", fmt::format("Bearer {}", m_token))
             .bodyJSON(json)
-            .put(fmt::format("{}/api/users/{}/difficulty", this->getBaseURL(), this->getUser().id)),
+            .put(fmt::format("{}/api/users/{}/difficulty", getBaseURL(), this->getUser().id)),
         [this, callback = std::move(callback)](web::WebResponse resp) mutable {
             auto code = resp.code();
 
             if (code == 401) {
                 this->logout();
+                m_sessionExpired = true;
+                log::error("Failed to submit difficulty placements, HTTP {}", code);
                 callback(Err("Invalid session, please log in again"));
                 return;
             }
@@ -979,12 +980,18 @@ void ALLManager::trySendLevelData(GJGameLevel* level) {
         web::WebRequest()
             .header("Authorization", fmt::format("Bearer {}", m_token))
             .bodyJSON(json)
-            .put(fmt::format("{}/api/levels/report-2p", this->getBaseURL())),
+            .put(fmt::format("{}/api/levels/report-2p", getBaseURL())),
         [this, id](web::WebResponse resp) {
             auto code = resp.code();
 
             if (code != 200) {
+                if (code == 401) {
+                    this->logout();
+                    m_sessionExpired = true;
+                }
+
                 log::error("Failed to report level data, HTTP {}", code);
+
                 return;
             }
 
@@ -1001,16 +1008,6 @@ void ALLManager::trySendLevelData(GJGameLevel* level) {
     );
 }
 
-std::string ALLManager::getBaseURL() {
-    auto url = Mod::get()->getSavedValue<std::string>("api-base-url");
-
-    while (std::string_view(url).ends_with("/")) {
-        url.pop_back();
-    }
-
-    return url;
-}
-
 void ALLManager::isLevelInList(int id, LevelInListCallback callback) {
     if (m_levelsInlist.contains(id)) {
         callback(Ok(m_levelsInlist.at(id)));
@@ -1025,7 +1022,7 @@ void ALLManager::isLevelInList(int id, LevelInListCallback callback) {
 
     async::spawn(
         web::WebRequest()
-            .get(fmt::format("{}/levels/{}/points", this->getBaseURL(), id)),
+            .get(fmt::format("{}/levels/{}/points", getBaseURL(), id)),
         [this, id](web::WebResponse resp) {
             const auto doCallbacks = [this, id](Result<bool> res) {
                 for (int i = 0; i < m_levelInListCallbacks.at(id).size(); i++) {
@@ -1083,4 +1080,94 @@ void ALLManager::saveLevelsInList() {
     }
 
     Mod::get()->setSavedValue("levels-in-list", arr);
+}
+
+void ALLManager::tryAddLevel(int id, GJGameLevel* level, AddLevelCallback callback) {
+    if (!this->isLoggedIn()) {
+        return;
+    }
+
+    if (m_levelsInlist.contains(id)) {
+        callback(Ok(m_levelsInlist.at(id)));
+        return;
+    }
+
+    m_addLevelCallbacks[id].push_back(std::move(callback));
+
+    if (m_addLevelCallbacks.at(id).size() > 1) {
+        return;
+    }
+
+    auto body = matjson::Value{};
+
+    body["name"] = std::string(level->m_levelName);
+    body["description"] = std::string(level->m_levelDesc);
+    body["authorId"] = level->m_accountID.value();
+    body["authorName"] = std::string(level->m_creatorName);
+    body["difficulty"] = stringForDifficulty(difficultyForLevel(level));
+    body["stars"] = level->m_stars.value();
+    body["requestedStars"] = level->m_starsRequested;
+    body["downloads"] = level->m_downloads;
+    body["likes"] = level->m_likes;
+    body["length"] = stringForLength(level->m_levelLength);
+    body["coins"] = level->m_coins;
+    body["featured"] = level->m_featured >= 1 || level->m_isEpic > 0;
+    body["epic"] = level->m_isEpic;
+    body["officialSongId"] = level->m_audioTrack;
+    body["customSongId"] = level->m_songID;
+
+    async::spawn(
+        web::WebRequest()
+            .header("Authorization", fmt::format("Bearer {}", m_token))
+            .bodyJSON(body)
+            .post(fmt::format("{}/levels/{}", getBaseURL(), id)),
+        [this, id](web::WebResponse resp) {
+            const auto doCallbacks = [this, id](Result<bool> res) {
+                if (!res.isOk()) {
+                    this->setLevelInList(id, false);
+                }
+
+                for (int i = 0; i < m_addLevelCallbacks.at(id).size(); i++) {
+                    m_addLevelCallbacks.at(id)[i](res);
+                }
+
+                m_addLevelCallbacks.erase(id);
+            };
+
+            auto code = resp.code();
+            auto res = resp.json();
+
+            if (!res.isOk()) {
+                auto err = fmt::format("Failed to add level to list, HTTP {}", code);
+                doCallbacks(Err(err));
+                log::error("{}", err);
+                return;
+            }
+
+            auto json = res.unwrap();
+
+            if (json.contains("error")) {
+                auto err = json["error"].asString().unwrapOr("unknown error");
+                doCallbacks(Err(fmt::format("Failed to add level to list, {}", err)));
+                log::error("Failed to add level to list, HTTP {}, {}", code, err);
+                return;
+            }
+
+            if (code != 200 && code != 201) {
+                auto err = fmt::format("Failed to add level to list, HTTP {}", code);
+                doCallbacks(Err(err));
+                log::error("{}", err);
+                return;
+            }
+
+            this->setLevelInList(id, true);
+            this->saveLevelsInList();
+
+            doCallbacks(Ok(true));
+        }
+    );
+}
+
+bool ALLManager::isAddingLevel(int id) {
+    return m_addLevelCallbacks.contains(id);
 }

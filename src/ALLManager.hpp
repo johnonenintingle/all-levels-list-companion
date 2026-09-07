@@ -10,6 +10,7 @@ using UserListsCallback = Function<void(Result<const std::vector<UserList>&>)>;
 using AnchorLevelsCallback = Function<void(Result<const std::unordered_map<Difficulty, std::vector<LevelRanking>>&>)>;
 using PlacementSubmitCallback = Function<void(Result<>)>;
 using LevelInListCallback = Function<void(Result<bool>)>;
+using AddLevelCallback = Function<void(Result<bool>)>;
 
 struct LevelSubmitInfo {
     int id;
@@ -49,6 +50,8 @@ private:
 
     std::unordered_map<int, bool> m_levelsInlist;
     std::unordered_map<int, std::vector<LevelInListCallback>> m_levelInListCallbacks;
+
+    std::unordered_map<int, std::vector<AddLevelCallback>> m_addLevelCallbacks;
 
 public:
 
@@ -109,10 +112,11 @@ public:
 
     void trySendLevelData(GJGameLevel*);
 
-    std::string getBaseURL();
-
     void isLevelInList(int, LevelInListCallback);
     void setLevelInList(int, bool);
     void saveLevelsInList();
+
+    void tryAddLevel(int, GJGameLevel*, AddLevelCallback);
+    bool isAddingLevel(int);
 
 };

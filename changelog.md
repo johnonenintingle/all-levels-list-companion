@@ -1,3 +1,8 @@
+# v1.0.3
+
+* Fixed incompatibility with betterinfos completed filter
+* Made levels get added to the list when u visit them
+
 # v1.0.2
 
 * Fixed one bug when checking if a level is in the list

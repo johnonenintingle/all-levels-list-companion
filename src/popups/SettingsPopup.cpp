@@ -116,7 +116,7 @@ bool SettingsPopup::init() {
     input->setScale(0.5f);
     input->setPosition({container->getContentWidth() - 10.f - input->getScaledContentWidth() / 2.f, container->getContentHeight() / 2.f});
     input->setCommonFilter(CommonFilter::Any);
-    input->setString(ALLManager::get().getBaseURL());
+    input->setString(getBaseURL());
 
     container->addChild(input);
 
