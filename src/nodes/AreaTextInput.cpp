@@ -51,7 +51,7 @@ bool AreaTextInput::init(const CCSize& size) {
 
         m_cursor->setVisible(true);
 
-        if (str.length() <= REVIEW_CHARACTER_LIMIT) {        
+        if (str.length() <= REVIEW_CHARACTER_LIMIT) {
             this->setText(str);
         } else {
             m_input->setString(m_text);

@@ -1,3 +1,8 @@
+# v1.0.4
+
+* Made unlisted levels not try to be added to the list
+* Tried to fix an android crash when feeling lucky with random tab
+
 # v1.0.3
 
 * Fixed incompatibility with betterinfos completed filter

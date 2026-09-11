@@ -121,6 +121,8 @@ static Difficulty difficultyForString(std::string_view str) {
 
 static std::string_view stringForDifficulty(Difficulty difficulty) {
     switch (difficulty) {
+        default:
+        case Difficulty::Unknown: return "NA";
         case Difficulty::Impossible: return "Impossible";
         case Difficulty::ExtremeDemon: return "Extreme Demon";
         case Difficulty::InsaneDemon: return "Insane Demon";
@@ -133,8 +135,6 @@ static std::string_view stringForDifficulty(Difficulty difficulty) {
         case Difficulty::Normal: return "Normal";
         case Difficulty::Easy: return "Easy";
         case Difficulty::Auto: return "Auto";
-        default:
-        case Difficulty::Unknown: return "Unknown";
     }
 }
 
@@ -163,8 +163,10 @@ static Difficulty difficultyForLevel(GJGameLevel* level) {
         difficulty = level->m_ratingsSum / level->m_ratings;
     }
 
-    if (difficulty <= -1) {
+    if (difficulty == -1) {
         return Difficulty::Auto;
+    } else if (difficulty <= 0) {
+        return Difficulty::Unknown;
     }
 
     return static_cast<Difficulty>(difficulty);

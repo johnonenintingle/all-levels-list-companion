@@ -10,13 +10,17 @@
 #include "nodes/ButtonSetting.hpp"
 #include "nodes/LoaderButton.hpp"
 
+#include "layers/ALLListLayer.hpp"
+
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/AccountLayer.hpp>
 #include <Geode/modify/EditorPauseLayer.hpp>
+#include <Geode/modify/LevelSearchLayer.hpp>
 
 #include <Geode/ui/Button.hpp>
+// #include <raydeeux.pages_api/include/PageMenu.h>
 
 $on_mod(Loaded) {
     (void)Mod::get()->registerCustomSettingType("button-setting", &ButtonSetting::parse);
@@ -142,6 +146,10 @@ class $modify(LevelInfoLayer) {
     bool init(GJGameLevel* p0, bool p1) {
         if (!LevelInfoLayer::init(p0, p1)) {
             return false;
+        }
+
+        if (m_level->m_unlisted) {
+            return;
         }
 
         auto id = m_level->m_levelID.value();
@@ -343,3 +351,60 @@ class $modify(EditorPauseLayer) {
     }
 
 };
+
+// class $modify(LevelSearchLayer) {
+
+//     bool init(int p0) {
+//         if (!LevelSearchLayer::init(p0)) {
+//             return false;
+//         }
+
+//         if (p0 > 0) {
+//             return true;
+//         }
+
+//         auto menu = this->getChildByIDRecursive("quick-search-menu");
+
+//         if (!menu) {
+//             return true;
+//         }
+
+//         auto btnSpr = SearchButton::create("GJ_longBtn04_001.png", "ALL ", 0.506f, "accountBtn_blocked_001.png");
+// 		btnSpr->getChildByIndex<CCNode*>(1)->setVisible(false);
+		
+// 		auto spr = CCSprite::create("all_logo_2.png"_spr);
+//         spr->setScale(0.44f);
+// 		spr->setPosition({82.1f, btnSpr->getContentHeight() / 2.f + 0.35f});
+
+// 		btnSpr->addChild(spr);
+
+// 		auto btn = Button::createWithNode(btnSpr, [this](Button*) {
+//             m_searchInput->onClickTrackNode(false);
+//             CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, ALLListLayer::scene()));
+//         });
+
+//         menu->addChild(btn);
+
+//         if (Loader::get()->isModLoaded("alphalaneous.random_tab")) {
+//             menu->updateLayout();
+//             return true;
+//         }
+
+// 		menu->setContentSize({365, 116});
+// 		menu->ignoreAnchorPointForPosition(false);
+// 		menu->setPosition({ menu->getPositionX(), CCDirector::get()->getWinSize().height / 2.f + 28.f });
+// 		menu->setLayout(
+//             RowLayout::create()
+//                 ->setGrowCrossAxis(true)
+//                 ->setCrossAxisOverflow(false)
+//                 ->setAxisAlignment(AxisAlignment::Center)
+//                 ->setCrossAxisAlignment(AxisAlignment::Center)
+//                 ->ignoreInvisibleChildren(true)
+//         );
+
+// 		static_cast<PageMenu*>(menu)->setPaged(9, PageOrientation::HORIZONTAL, 422);
+
+//         return true;
+//     }
+
+// };

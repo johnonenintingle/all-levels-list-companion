@@ -1083,7 +1083,7 @@ void ALLManager::saveLevelsInList() {
 }
 
 void ALLManager::tryAddLevel(int id, GJGameLevel* level, AddLevelCallback callback) {
-    if (!this->isLoggedIn()) {
+    if (!level || level->m_unlisted || !this->isLoggedIn()) {
         return;
     }
 
@@ -1104,7 +1104,11 @@ void ALLManager::tryAddLevel(int id, GJGameLevel* level, AddLevelCallback callba
     body["description"] = std::string(level->m_levelDesc);
     body["authorId"] = level->m_accountID.value();
     body["authorName"] = std::string(level->m_creatorName);
-    body["difficulty"] = stringForDifficulty(difficultyForLevel(level));
+
+    if (difficultyForLevel(level) != Difficulty::Unknown) {
+        body["difficulty"] = stringForDifficulty(difficultyForLevel(level));
+    }
+    
     body["stars"] = level->m_stars.value();
     body["requestedStars"] = level->m_starsRequested;
     body["downloads"] = level->m_downloads;
