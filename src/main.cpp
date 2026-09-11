@@ -148,8 +148,8 @@ class $modify(LevelInfoLayer) {
             return false;
         }
 
-        if (m_level->m_unlisted) {
-            return;
+        if (!m_level || m_level->m_unlisted) {
+            return true;
         }
 
         auto id = m_level->m_levelID.value();
