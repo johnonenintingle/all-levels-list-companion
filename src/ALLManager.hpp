@@ -13,10 +13,10 @@ using LevelInListCallback = Function<void(Result<bool>)>;
 using AddLevelCallback = Function<void(Result<bool>)>;
 
 struct LevelSubmitInfo {
-    int id;
+    int64_t id;
     Difficulty bucket;
-    int refAbove;
-    int refBelow;
+    int64_t refAbove;
+    int64_t refBelow;
     int listID;
 };
 
@@ -36,10 +36,10 @@ private:
     bool m_isSyncingCompletions = false;
     std::vector<SyncCallback> m_syncCallbacks;
 
-    std::unordered_map<int, LevelRating> m_cachedLevelRatings;
-    std::unordered_map<int, std::vector<LevelRatingCallback>> m_levelRatingCallbacks;
+    std::unordered_map<int64_t, LevelRating> m_cachedLevelRatings;
+    std::unordered_map<int64_t, std::vector<LevelRatingCallback>> m_levelRatingCallbacks;
 
-    std::unordered_map<int, std::vector<SubmitLevelRatingCallback>> m_submitRatingCallbacks;
+    std::unordered_map<int64_t, std::vector<SubmitLevelRatingCallback>> m_submitRatingCallbacks;
 
     std::vector<UserList> m_userLists;
     std::vector<UserListsCallback> m_userListsCallbacks;
@@ -48,19 +48,19 @@ private:
     std::unordered_map<Difficulty, std::vector<LevelRanking>> m_anchorLevels;
     std::vector<AnchorLevelsCallback> m_anchorLevelsCallbacks;
 
-    std::unordered_map<int, bool> m_levelsInlist;
-    std::unordered_map<int, std::vector<LevelInListCallback>> m_levelInListCallbacks;
+    std::unordered_map<int64_t, bool> m_levelsInlist;
+    std::unordered_map<int64_t, std::vector<LevelInListCallback>> m_levelInListCallbacks;
 
-    std::unordered_map<int, std::vector<AddLevelCallback>> m_addLevelCallbacks;
+    std::unordered_map<int64_t, std::vector<AddLevelCallback>> m_addLevelCallbacks;
 
 public:
 
-    std::unordered_set<int> m_pendingCompletions;
-    std::unordered_set<int> m_registeredCompletions;
+    std::unordered_set<int64_t> m_pendingCompletions;
+    std::unordered_set<int64_t> m_registeredCompletions;
 
     bool m_sessionExpired = false;
 
-    std::unordered_set<int> m_levelsDataSent;
+    std::unordered_set<int64_t> m_levelsDataSent;
 
     static ALLManager& get();
     
@@ -82,24 +82,24 @@ public:
 
     void syncPendingCompletions(bool);
     void syncAllCompletions();
-    void syncCompletions(std::vector<int>, bool);
+    void syncCompletions(std::vector<int64_t>, bool);
     void savePendingCompletions();
     void saveRegisteredCompletions();
     void saveCompletions();
-    void addCompletion(int, bool = false);
+    void addCompletion(int64_t, bool = false);
 
     bool isSyncingCompletions();
     void listenForSync(SyncCallback);
 
-    void tryCompleteLevel(int);
+    void tryCompleteLevel(int64_t);
     
-    std::optional<LevelRating> levelRatingForLevel(int);
-    void cacheLevelRating(int, LevelRating);
-    void uncacheLevelRating(int);
-    void requestLevelRating(int, LevelRatingCallback);
-    void submitLevelRating(int, const LevelRating&, SubmitLevelRatingCallback);
-    void listenForSubmitLevelRating(int, SubmitLevelRatingCallback);
-    bool isSubmittingRatingFor(int);
+    std::optional<LevelRating> levelRatingForLevel(int64_t);
+    void cacheLevelRating(int64_t, LevelRating);
+    void uncacheLevelRating(int64_t);
+    void requestLevelRating(int64_t, LevelRatingCallback);
+    void submitLevelRating(int64_t, const LevelRating&, SubmitLevelRatingCallback);
+    void listenForSubmitLevelRating(int64_t, SubmitLevelRatingCallback);
+    bool isSubmittingRatingFor(int64_t);
 
     void getUserLists(UserListsCallback);
     bool areUserListsCached();
@@ -112,11 +112,11 @@ public:
 
     void trySendLevelData(GJGameLevel*);
 
-    void isLevelInList(int, LevelInListCallback);
-    void setLevelInList(int, bool);
+    void isLevelInList(int64_t, LevelInListCallback);
+    void setLevelInList(int64_t, bool);
     void saveLevelsInList();
 
-    void tryAddLevel(int, GJGameLevel*, AddLevelCallback);
-    bool isAddingLevel(int);
+    void tryAddLevel(int64_t, GJGameLevel*, AddLevelCallback);
+    bool isAddingLevel(int64_t);
 
 };

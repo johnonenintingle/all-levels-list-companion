@@ -5,10 +5,10 @@
 
 #include <Geode/ui/Button.hpp>
 
-PickDifficultyLayer::PickDifficultyLayer(int levelID, Function<void(Result<>)> loadedCallback, Function<void(int, Difficulty, std::vector<LevelRanking>)> selectedCallback)
+PickDifficultyLayer::PickDifficultyLayer(int64_t levelID, Function<void(Result<>)> loadedCallback, Function<void(int64_t, Difficulty, std::vector<LevelRanking>)> selectedCallback)
     : m_levelID(levelID), m_loadedCallback(std::move(loadedCallback)), m_selectedCallback(std::move(selectedCallback)) {}
 
-PickDifficultyLayer* PickDifficultyLayer::create(int levelID, Function<void(Result<>)> loadedCallback, Function<void(int, Difficulty, std::vector<LevelRanking>)> selectedCallback) {
+PickDifficultyLayer* PickDifficultyLayer::create(int64_t levelID, Function<void(Result<>)> loadedCallback, Function<void(int64_t, Difficulty, std::vector<LevelRanking>)> selectedCallback) {
     auto ret = new PickDifficultyLayer(levelID, std::move(loadedCallback), std::move(selectedCallback));
 
     if (ret->init()) {

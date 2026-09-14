@@ -7,10 +7,10 @@
 #include <Geode/ui/Button.hpp>
 #include <vector>
 
-LevelVersusLayer::LevelVersusLayer(Function<void(Result<bool>)> loadCallback, Function<void(int, bool, int, int, int, Difficulty)> finishCallback)
+LevelVersusLayer::LevelVersusLayer(Function<void(Result<bool>)> loadCallback, Function<void(int64_t, bool, int64_t, int64_t, int, Difficulty)> finishCallback)
     : m_loadCallback(std::move(loadCallback)), m_finishCallback(std::move(finishCallback)) {}
 
-LevelVersusLayer* LevelVersusLayer::create(GJGameLevel* level, Function<void(Result<bool>)> loadCallback, Function<void(int, bool, int, int, int, Difficulty)> finishCallback) {
+LevelVersusLayer* LevelVersusLayer::create(GJGameLevel* level, Function<void(Result<bool>)> loadCallback, Function<void(int64_t, bool, int64_t, int64_t, int, Difficulty)> finishCallback) {
     auto ret = new LevelVersusLayer(std::move(loadCallback), std::move(finishCallback));
 
     if (ret->init(level)) {

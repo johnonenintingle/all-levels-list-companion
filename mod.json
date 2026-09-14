@@ -1,5 +1,5 @@
 {
-	"geode": "5.7.1",
+	"geode": "5.10.1",
 	"gd": {
 		"win": "2.2081",
 		"android": "2.2081",
@@ -8,7 +8,7 @@
 	},
 	"id": "john119.list-sync",
 	"name": "All Levels List Companion",
-	"version": "v1.0.4",
+	"version": "v1.0.5",
 	"developer": "john119",
 	"description": "Access the All Levels List in-game!",
 	"tags": [

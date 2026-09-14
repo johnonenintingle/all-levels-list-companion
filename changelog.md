@@ -1,3 +1,7 @@
+# v1.0.5
+
+* Fixed not being able to rank levels if you had ranked a not in the list level in the website
+
 # v1.0.4
 
 * Made unlisted levels not try to be added to the list

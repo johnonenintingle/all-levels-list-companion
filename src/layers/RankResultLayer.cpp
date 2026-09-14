@@ -25,7 +25,7 @@ bool RankResultLayer::init() {
     return true;
 };
 
-void RankResultLayer::setLevel(int id, bool harder, int refAbove, int refBelow, int listID, Difficulty difficulty) {
+void RankResultLayer::setLevel(int64_t id, bool harder, int64_t refAbove, int64_t refBelow, int listID, Difficulty difficulty) {
     auto& all = ALLManager::get();
     
     if (!all.areUserListsCached()) {
@@ -48,7 +48,7 @@ void RankResultLayer::setLevel(int id, bool harder, int refAbove, int refBelow, 
     });
 }
 
-void RankResultLayer::loadFor(int id, bool harder, int refAbove, int refBelow, int listID, Difficulty difficulty, std::vector<LevelRanking> levels) {
+void RankResultLayer::loadFor(int64_t id, bool harder, int64_t refAbove, int64_t refBelow, int listID, Difficulty difficulty, std::vector<LevelRanking> levels) {
     m_levels = std::move(levels);
     m_difficulty = difficulty;
     m_refAbove = refAbove;

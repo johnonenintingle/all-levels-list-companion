@@ -72,7 +72,7 @@ struct LevelRating {
 };
 
 struct LevelRanking {
-    int id;
+    int64_t id;
     std::string name;
     int listID;
     Difficulty bucket = Difficulty::Unknown;

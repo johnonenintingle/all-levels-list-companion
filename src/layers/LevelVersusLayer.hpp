@@ -16,12 +16,12 @@ private:
 
     struct Duel {
         bool choseHarder;
-        int refAbove;
-        int refBelow;
+        int64_t refAbove;
+        int64_t refBelow;
     };
 
     Function<void(Result<bool>)> m_loadCallback;
-    Function<void(int, bool, int, int, int, Difficulty)> m_finishCallback;
+    Function<void(int64_t, bool, int64_t, int64_t, int, Difficulty)> m_finishCallback;
 
     CCLabelBMFont* m_duelLabel = nullptr;
     CCLayerGradient* m_gradientBar = nullptr;
@@ -37,18 +37,18 @@ private:
 
     Difficulty m_difficulty;
 
-    int m_levelID;
+    int64_t m_levelID;
     int m_listID;
     int m_currentDuel = -1;
     int m_lastIndex = -1;
 
-    int m_refAbove = 0;
-    int m_refBelow = 0;
+    int64_t m_refAbove = 0;
+    int64_t m_refBelow = 0;
     
     bool m_animating = false;
     bool m_usingRefs = false;
 
-    LevelVersusLayer(Function<void(Result<bool>)>, Function<void(int, bool, int, int, int, Difficulty)>);
+    LevelVersusLayer(Function<void(Result<bool>)>, Function<void(int64_t, bool, int64_t, int64_t, int, Difficulty)>);
 
     bool init(GJGameLevel*);
 
@@ -58,7 +58,7 @@ private:
 
 public:
 
-    static LevelVersusLayer* create(GJGameLevel*, Function<void(Result<bool>)>, Function<void(int, bool, int, int, int, Difficulty)>);
+    static LevelVersusLayer* create(GJGameLevel*, Function<void(Result<bool>)>, Function<void(int64_t, bool, int64_t, int64_t, int, Difficulty)>);
 
     void setLevels(int, Difficulty, std::vector<LevelRanking>);
 

@@ -16,21 +16,21 @@ private:
     Difficulty m_difficulty;
 
     int m_placement = 0;
-    int m_refAbove = 0;
-    int m_refBelow = 0;
+    int64_t m_refAbove = 0;
+    int64_t m_refBelow = 0;
     int m_listID = 0;
 
     RankResultLayer(GJGameLevel*, Function<void(Result<bool>)>);
 
     bool init() override;
 
-    void loadFor(int, bool, int, int, int, Difficulty, std::vector<LevelRanking>);
+    void loadFor(int64_t, bool, int64_t, int64_t, int, Difficulty, std::vector<LevelRanking>);
 
 public:
 
     static RankResultLayer* create(GJGameLevel*, Function<void(Result<bool>)>);
 
-    void setLevel(int, bool, int, int, int, Difficulty);
+    void setLevel(int64_t, bool, int64_t, int64_t, int, Difficulty);
     int getPlacement();
 
     void submitPlacement(Function<void(Result<>)>);

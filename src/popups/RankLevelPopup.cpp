@@ -125,7 +125,7 @@ bool RankLevelPopup::init(GJGameLevel* level) {
                 Notification::create("Failed to fetch anchor levels", NotificationIcon::Error)->show();
             }
         },
-        [this](int id, bool harder, int refAbove, int refBelow, int listID, Difficulty difficulty) {
+        [this](int64_t id, bool harder, int64_t refAbove, int64_t refBelow, int listID, Difficulty difficulty) {
             m_placement = 0;
 
             if (m_currentStep != 1) {

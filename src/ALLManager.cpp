@@ -208,7 +208,7 @@ void ALLManager::updateUserInfo() {
 
 void ALLManager::syncPendingCompletions(bool silent) {
     if (this->isLoggedIn()) {
-        auto vec = std::vector<int>{};
+        auto vec = std::vector<int64_t>{};
         vec.reserve(m_pendingCompletions.size());
         vec.assign(m_pendingCompletions.begin(), m_pendingCompletions.end());
 
@@ -224,7 +224,7 @@ void ALLManager::syncAllCompletions() {
     m_pendingCompletions.clear();
     m_registeredCompletions.clear();
 
-    auto completions = std::unordered_set<int>{};
+    auto completions = std::unordered_set<int64_t>{};
 
     for (auto level : getCompletedLevels()) {
         auto id = level->m_levelID.value();
@@ -234,14 +234,14 @@ void ALLManager::syncAllCompletions() {
         }
     }
 
-    auto completionsVec = std::vector<int>{};
+    auto completionsVec = std::vector<int64_t>{};
     completionsVec.reserve(completions.size());
     completionsVec.assign(completions.begin(), completions.end());
 
     this->syncCompletions(std::move(completionsVec), false);
 }
 
-void ALLManager::syncCompletions(std::vector<int> completions, bool silent) {
+void ALLManager::syncCompletions(std::vector<int64_t> completions, bool silent) {
     if (m_isSyncingCompletions || completions.empty() || !this->isLoggedIn()) {
         return;
     }
@@ -330,9 +330,9 @@ void ALLManager::syncCompletions(std::vector<int> completions, bool silent) {
                 return;
             }
             
-            auto done = std::unordered_set<int>{};
+            auto done = std::unordered_set<int64_t>{};
 
-            const auto checkID = [&, this](int id) {
+            const auto checkID = [&, this](int64_t id) {
                 if (id <= 0) {
                     return;
                 }
@@ -349,7 +349,7 @@ void ALLManager::syncCompletions(std::vector<int> completions, bool silent) {
                 checkID(v["id"].asInt().unwrapOr(0));
             }
 
-            auto stillPending = std::unordered_set<int>{};
+            auto stillPending = std::unordered_set<int64_t>{};
 
             for (auto id : m_pendingCompletions) {
                 if (!done.contains(id)) {
@@ -407,7 +407,7 @@ void ALLManager::saveCompletions() {
     this->saveRegisteredCompletions();
 }
 
-void ALLManager::addCompletion(int id, bool ignoreAutoSync) {
+void ALLManager::addCompletion(int64_t id, bool ignoreAutoSync) {
     if (!ignoreAutoSync && this->isLoggedIn() && Mod::get()->getSavedValue<bool>("auto-sync-completions")) {
         this->tryCompleteLevel(id);
         return;
@@ -427,7 +427,7 @@ void ALLManager::listenForSync(SyncCallback callback) {
     }
 }
 
-void ALLManager::tryCompleteLevel(int id) {
+void ALLManager::tryCompleteLevel(int64_t id) {
     async::spawn(
         web::WebRequest()
             .header("Authorization", fmt::format("Bearer {}", m_token))
@@ -470,7 +470,7 @@ void ALLManager::tryCompleteLevel(int id) {
     );
 }
 
-std::optional<LevelRating> ALLManager::levelRatingForLevel(int id) {
+std::optional<LevelRating> ALLManager::levelRatingForLevel(int64_t id) {
     if (m_cachedLevelRatings.contains(id)) {
         return m_cachedLevelRatings.at(id);
     }
@@ -478,15 +478,15 @@ std::optional<LevelRating> ALLManager::levelRatingForLevel(int id) {
     return {};
 }
 
-void ALLManager::cacheLevelRating(int id, LevelRating rating) {
+void ALLManager::cacheLevelRating(int64_t id, LevelRating rating) {
     m_cachedLevelRatings[id] = std::move(rating);
 }
 
-void ALLManager::uncacheLevelRating(int id) {
+void ALLManager::uncacheLevelRating(int64_t id) {
     m_cachedLevelRatings.erase(id);
 }
 
-void ALLManager::requestLevelRating(int id, LevelRatingCallback callback) {
+void ALLManager::requestLevelRating(int64_t id, LevelRatingCallback callback) {
     if (!this->isLoggedIn()) {
         return;
     }
@@ -562,7 +562,7 @@ void ALLManager::requestLevelRating(int id, LevelRatingCallback callback) {
     );
 }
 
-void ALLManager::submitLevelRating(int id, const LevelRating& rating, SubmitLevelRatingCallback callback) {
+void ALLManager::submitLevelRating(int64_t id, const LevelRating& rating, SubmitLevelRatingCallback callback) {
     if (m_submitRatingCallbacks.contains(id)) {
         return;
     }
@@ -629,14 +629,14 @@ void ALLManager::submitLevelRating(int id, const LevelRating& rating, SubmitLeve
     );
 }
 
-void ALLManager::listenForSubmitLevelRating(int id, SubmitLevelRatingCallback callback) {
+void ALLManager::listenForSubmitLevelRating(int64_t id, SubmitLevelRatingCallback callback) {
     if (m_submitRatingCallbacks.contains(id)) {
         m_submitRatingCallbacks.at(id).push_back(std::move(callback));
         return;
     }
 }
 
-bool ALLManager::isSubmittingRatingFor(int id) {
+bool ALLManager::isSubmittingRatingFor(int64_t id) {
     return m_submitRatingCallbacks.contains(id);
 }
 
@@ -698,7 +698,7 @@ void ALLManager::getUserLists(UserListsCallback callback) {
 
             for (const auto& v : json["ranked"]) {
                 rankings.push_back(LevelRanking{
-                    .id = numFromString<int>(v["levelId"].asString().unwrapOr("0")).unwrapOr(0),
+                    .id = numFromString<int64_t>(v["levelId"].asString().unwrapOr("0")).unwrapOr(0),
                     .name = v["name"].asString().unwrapOr(""),
                     .listID = numFromString<int>(v["personalListId"].asString().unwrapOr("0")).unwrapOr(0),
                     .bucket = difficultyForString(v["bucket"].asString().unwrapOr(""))
@@ -747,7 +747,7 @@ void ALLManager::getUserLists(UserListsCallback callback) {
                         .sortOrder = 2
                     });
 
-                    auto listIDs = std::unordered_set<int>{};
+                    auto listIDs = std::unordered_set<int64_t>{};
 
                     for (const auto& v : json["lists"]) {
                         auto id = static_cast<int>(v["id"].asInt().unwrapOr(0));
@@ -845,11 +845,11 @@ void ALLManager::requestAnchorLevels(AnchorLevelsCallback callback) {
 
             m_anchorLevels.clear();
 
-            auto levels = std::unordered_map<int, LevelRanking>{};
+            auto levels = std::unordered_map<int64_t, LevelRanking>{};
 
             const auto scanLevels = [&](const matjson::Value& arr) {
                 for (const auto& v : arr) {
-                    auto id = numFromString<int>(v["levelId"].asString().unwrapOr("0")).unwrapOr(0);
+                    auto id = numFromString<int64_t>(v["levelId"].asString().unwrapOr("0")).unwrapOr(0);
 
                     if (id <= 0 || levels.contains(id)) {
                         return;
@@ -875,7 +875,7 @@ void ALLManager::requestAnchorLevels(AnchorLevelsCallback callback) {
                 }
 
                 for (const auto& b : v) {
-                    auto id = numFromString<int>(b.asString().unwrapOr("0")).unwrapOr(0);
+                    auto id = numFromString<int64_t>(b.asString().unwrapOr("0")).unwrapOr(0);
 
                     if (levels.contains(id)) {
                         m_anchorLevels[difficulty].push_back(levels.at(id));
@@ -1008,7 +1008,7 @@ void ALLManager::trySendLevelData(GJGameLevel* level) {
     );
 }
 
-void ALLManager::isLevelInList(int id, LevelInListCallback callback) {
+void ALLManager::isLevelInList(int64_t id, LevelInListCallback callback) {
     if (m_levelsInlist.contains(id)) {
         callback(Ok(m_levelsInlist.at(id)));
         return;
@@ -1066,7 +1066,7 @@ void ALLManager::isLevelInList(int id, LevelInListCallback callback) {
     );
 }
 
-void ALLManager::setLevelInList(int id, bool inList) {
+void ALLManager::setLevelInList(int64_t id, bool inList) {
     m_levelsInlist[id] = inList;
 }
 
@@ -1082,7 +1082,7 @@ void ALLManager::saveLevelsInList() {
     Mod::get()->setSavedValue("levels-in-list", arr);
 }
 
-void ALLManager::tryAddLevel(int id, GJGameLevel* level, AddLevelCallback callback) {
+void ALLManager::tryAddLevel(int64_t id, GJGameLevel* level, AddLevelCallback callback) {
     if (!level || level->m_unlisted || !this->isLoggedIn()) {
         return;
     }
@@ -1172,6 +1172,6 @@ void ALLManager::tryAddLevel(int id, GJGameLevel* level, AddLevelCallback callba
     );
 }
 
-bool ALLManager::isAddingLevel(int id) {
+bool ALLManager::isAddingLevel(int64_t id) {
     return m_addLevelCallbacks.contains(id);
 }
