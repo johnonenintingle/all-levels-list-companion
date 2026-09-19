@@ -448,21 +448,24 @@ void LevelVersusLayer::setLevels(int listID, Difficulty difficulty, std::vector<
 
     m_loadCallback(Ok(true));
 
-    all.requestAnchorLevels([selfref = WeakRef(this), difficulty](Result<const std::unordered_map<Difficulty, std::vector<LevelRanking>>&> res) {
-        auto self = selfref.lock();
-
-        if (!self) {
+    all.requestAnchorLevels([this, selfref = WeakRef(this), difficulty](Result<const std::unordered_map<Difficulty, std::vector<LevelRanking>>&> res) {
+        if (!selfref.lock()) {
             return;
         }
 
         if (!res.isOk()) {
-            self->m_loadCallback(Err(""));
+            m_loadCallback(Err(""));
             return;
         }
 
-        self->m_loadCallback(Ok(false));
-        self->m_levels = res.unwrap().at(difficulty);
-        self->loadDuel(0, TransitionMode::Instant);
+        m_loadCallback(Ok(false));
+        m_levels = res.unwrap().at(difficulty);
+
+        std::erase_if(m_levels, [this](const LevelRanking& level) {
+            return level.id == m_levelID;
+        });
+
+        this->loadDuel(0, TransitionMode::Instant);
     });
 }
 

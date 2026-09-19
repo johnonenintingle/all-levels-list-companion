@@ -1,3 +1,7 @@
+# v1.0.6
+
+* Fixed u being able to compare difficulty against the same level sometimes
+
 # v1.0.5
 
 * Fixed not being able to rank levels if you had ranked a not in the list level in the website
