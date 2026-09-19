@@ -296,7 +296,7 @@ class $modify(EditorPauseLayer) {
             return false;
         }
 
-        if (!editorLayer) {
+        if (!editorLayer || !editorLayer->m_editorUI) {
             return true;
         }
 

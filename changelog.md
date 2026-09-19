@@ -1,6 +1,7 @@
 # v1.0.6
 
 * Fixed u being able to compare difficulty against the same level sometimes
+* Fixed possible crash with a mystery mod in the editor
 
 # v1.0.5
 
