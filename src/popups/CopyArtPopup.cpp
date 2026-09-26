@@ -91,6 +91,12 @@ bool CopyArtPopup::init(LevelEditorLayer* editorLayer) {
     auto colorChannels = matjson::Value{};
 
     for (auto id : usedColorChannels) {
+        if (id == 1005 || id == 1006) {
+            auto gm = GameManager::get();
+            colorChannels[numToString(id)] = gm->colorForIdx(id == 1005 ? gm->getPlayerColor() : gm->getPlayerColor2());
+            continue;
+        }
+        
         if (auto action = editorLayer->m_levelSettings->m_effectManager->getColorAction(id)) {
             if (id > 0) {
                 colorChannels[numToString(id)] = action->m_fromColor;
