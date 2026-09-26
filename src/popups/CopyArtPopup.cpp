@@ -4,10 +4,10 @@
 
 #include <Geode/ui/Button.hpp>
 
-CopyArtPopup* CopyArtPopup::create(std::string string) {
+CopyArtPopup* CopyArtPopup::create(LevelEditorLayer* editorLayer) {
     auto ret = new CopyArtPopup();
 
-    if (ret->init(std::move(string))) {
+    if (ret->init(editorLayer)) {
         ret->autorelease();
         return ret;
     }
@@ -16,7 +16,96 @@ CopyArtPopup* CopyArtPopup::create(std::string string) {
     return nullptr;
 }
 
-bool CopyArtPopup::init(std::string string) {
+bool CopyArtPopup::init(LevelEditorLayer* editorLayer) {
+    if (!editorLayer->m_editorUI) {
+        return false;
+    }
+
+    auto selectedObject = editorLayer->m_editorUI->m_selectedObject;
+    auto selectedObjects = editorLayer->m_editorUI->m_selectedObjects;
+    
+    if (!selectedObject && !selectedObjects) {
+        return false;
+    }
+
+    auto mainObj = matjson::Value{};
+    auto objects = matjson::Value::array();
+    auto usedColorChannels = std::unordered_set<int>{};
+
+    for (int i = 1; i < 20; i++) {
+        usedColorChannels.insert(1000 + i);
+    }
+    
+    const auto goThrough = [&](GameObject* object) {
+        if (!object) {
+            return;
+        }
+
+        auto json = matjson::Value{};
+
+        json["id"] = object->m_objectID;
+        json["xPos"] = object->getPositionX();
+        json["yPos"] = object->getPositionY() - 90.f;
+        json["xScale"] = object->getScaleX();
+        json["yScale"] = object->getScaleY();
+        json["rotation"] = object->getRotation();
+        json["hidden"] = object->m_isHide;  
+
+        auto groups = matjson::Value::array();
+
+        if (object->m_groups) {
+            for (auto group : *object->m_groups) {
+                groups.push(group);
+            }
+        }
+
+        json["groups"] = groups;
+
+        if (object->m_baseColor) {
+            usedColorChannels.insert(object->m_baseColor->m_colorID);
+            json["baseColorChannel"] = object->m_baseColor->m_colorID;
+        }
+
+        if (object->m_detailColor) {
+            usedColorChannels.insert(object->m_detailColor->m_colorID);
+            json["detailColorChannel"] = object->m_detailColor->m_colorID;
+        }
+
+        objects.push(json);
+    };
+
+    if (selectedObjects) {
+        for (auto object : CCArrayExt<GameObject*>(selectedObjects)) {
+            goThrough(object);
+        }
+    }
+
+    if (selectedObject) {
+        goThrough(selectedObject);
+    }
+
+    if (objects.size() > 0) {
+        mainObj["objects"] = objects;
+    }
+
+    auto colorChannels = matjson::Value{};
+
+    for (auto id : usedColorChannels) {
+        if (auto action = editorLayer->m_levelSettings->m_effectManager->getColorAction(id)) {
+            if (id > 0) {
+                colorChannels[numToString(id)] = action->m_fromColor;
+            }
+        }
+    }
+
+    mainObj["colorChannels"] = colorChannels;
+
+    auto string = mainObj.dump(0);
+
+    if (string.size() <= 2) {
+        return false;
+    }
+
     Popup::init(240, 240);
 
     this->setTitle("Copy Art");
@@ -27,7 +116,6 @@ bool CopyArtPopup::init(std::string string) {
     lbl->setScale(0.3f);
     
     m_mainLayer->addChild(lbl);
-
 
     lbl = CCLabelBMFont::create("profile to decorate it", "bigFont.fnt");
     lbl->setPosition({m_size.width / 2.f, 188});
@@ -107,13 +195,13 @@ bool CopyArtPopup::init(std::string string) {
 
     m_mainLayer->addChild(btn);
 
-    if (string.size() > 500) {
-        string = string.substr(0, 500) + "...";
+    if (string.size() > 650) {
+        string = string.substr(0, 650) + "...";
     }
 
     auto area = AreaTextInput::create({189, 105}, [](const std::string&) {});
     area->setOpacity(140);
-    area->setScale(1.36f);
+    area->setScale(1.12f);
     area->setText(string);
     area->setEnabled(false);
     area->setPosition({m_size.width / 2.f, 99});

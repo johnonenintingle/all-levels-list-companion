@@ -116,6 +116,8 @@ class $modify(MenuLayer) {
         }
 
         auto btn = Button::createWithSprite("all_logo.png"_spr, [](Button*) {
+            // CCDirector::get()->pushScene(CCTransitionFade::create(0.5f, ALLListLayer::scene()));
+            // return;
             if (ALLManager::get().isLoggedIn()) {
                 if (auto popup = ProfilePopup::create()) {
                     popup->show();
@@ -325,20 +327,12 @@ class $modify(EditorPauseLayer) {
         plain->addChild(spr);
 
         auto btn = Button::createWithNode(plain, [this](Button*) {
-            auto string = std::string{};
-
-            if (m_editorLayer->m_editorUI->m_selectedObjects) {
-                for (auto object : CCArrayExt<GameObject*>(m_editorLayer->m_editorUI->m_selectedObjects)) {
-                    string += std::string(object->getSaveString(m_editorLayer)) + ";";
-                }
-            }
-
-            if (m_editorLayer->m_editorUI->m_selectedObject) {
-                string += std::string(m_editorLayer->m_editorUI->m_selectedObject->getSaveString(m_editorLayer)) + ";";
-            }
-
-            if (!string.empty()) {
-                CopyArtPopup::create(std::move(string))->show();
+            // if (m_editorLayer->m_editorUI->m_selectedObject) {
+            //     log::debug("{} {}", m_editorLayer->m_editorUI->m_selectedObject->getSaveString(m_editorLayer), m_editorLayer->m_editorUI->m_selectedObject->getPosition());
+            // }
+            
+            if (auto popup = CopyArtPopup::create(m_editorLayer)) {
+                popup->show();
             }
         });
         btn->setID("copy-art-button"_spr);

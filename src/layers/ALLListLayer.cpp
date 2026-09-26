@@ -1,4 +1,7 @@
 #include "ALLListLayer.hpp"
+#include "ProScrollLayer.hpp"
+
+#include "nodes/ALLLevelCell.hpp"
 
 #include <Geode/ui/Button.hpp>
 
@@ -43,11 +46,22 @@ bool ALLListLayer::init() {
 
     this->addChild(logo);
 
-    auto bg = CCLayerColor::create({0, 0, 0, 67}, 366, 251);
+    auto bg = CCLayerColor::create({0, 0, 0, 67}, 362, 247);
     bg->setPosition(winSize / 2.f + CCPoint{0, -14});
     bg->ignoreAnchorPointForPosition(false);
 
     this->addChild(bg);
+
+    auto scroll = ProScrollLayer::create(bg->getContentSize());
+    scroll->setPosition(bg->getPosition());
+    scroll->m_contentLayer->setLayout(ScrollLayer::createDefaultListLayout(0.f));
+
+    this->addChild(scroll);
+
+    scroll->m_contentLayer->addChild(ALLLevelCell::create());
+
+    scroll->m_contentLayer->updateLayout();
+    scroll->scrollToTop();
 
     auto border = NineSlice::create("green-border.png"_spr);
     border->setPosition(winSize / 2.f + CCPoint{0, -14});

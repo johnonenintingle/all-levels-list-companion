@@ -6,10 +6,10 @@ class CopyArtPopup : public Popup {
 
 private:
 
-    bool init(std::string);
+    bool init(LevelEditorLayer*);
 
 public:
 
-    static CopyArtPopup* create(std::string);
+    static CopyArtPopup* create(LevelEditorLayer*);
 
 };
